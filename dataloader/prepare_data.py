@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 from dataloader.negative_samples import select_negative_samples
+from dataloader.prepare_test_data import all_items_to_test_users
 
 
 def filter_interactions(interactions: pd.DataFrame, threshold: int = 0) -> pd.DataFrame:
@@ -123,7 +124,8 @@ def get_positive_and_negative_interactions(interactions: pd.DataFrame, user_feat
             train_data: train pd.DataFrame with user-item interactions with all features with target
             val_data: val pd.DataFrame with user-item interactions with all features with target
             test_data: test pd.DataFrame with user-item interactions with all features with target
-  
+            test_user_item_interact: pd.DataFrame with user-item positive interactions with
+                user features with item features
     """
     train_interactions, val_interactions, test_interactions = train_val_test_split(interactions)
 
@@ -150,9 +152,12 @@ def get_positive_and_negative_interactions(interactions: pd.DataFrame, user_feat
 
     # Готовим тестовый файл для MAP@10
     test_data = add_targets_and_concat(test_user_item_interact)
+    all_items_to_user = all_items_to_test_users(test_data, all_items)
+    test_user_item_interact = get_full_dataset_from_interactions(all_items_to_user, user_features, item_features)
 
     train_data.to_csv('./data/prepared/train_data.csv', index=False)
     val_data.to_csv('./data/prepared/val_data.csv', index=False)
     test_data.to_csv('./data/prepared/test_data.csv', index=False)
+    test_user_item_interact.to_csv('./data/prepared/test_user_item_interact.csv', index=False)
 
-    return train_data, val_data, test_data
+    return train_data, val_data, test_data, test_user_item_interact
